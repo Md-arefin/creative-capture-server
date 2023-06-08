@@ -27,11 +27,20 @@ async function run() {
     await client.connect();
 
     const popularClassCollection = client.db('creativeCaptureDB').collection('classes');
+    const popularInstructorCollection = client.db('creativeCaptureDB').collection('instructors');
 
     // get popular classes data
 
     app.get('/popularClass', async (req, res) =>{
       const cursor = popularClassCollection.find().sort({numberOfStudents :-1}).limit(6);
+      const result = await cursor.toArray();
+      res.send(result);
+    })
+
+    // get popular instructors data
+
+    app.get('/popularInstructor', async (req, res) =>{
+      const cursor = popularInstructorCollection.find().sort({numberOfStudents: -1}).limit(6);
       const result = await cursor.toArray();
       res.send(result);
     })
