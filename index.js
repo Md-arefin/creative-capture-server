@@ -31,24 +31,31 @@ async function run() {
 
     // get popular classes data
 
-    app.get('/popularClass', async (req, res) =>{
-      const cursor = popularClassCollection.find().sort({numberOfStudents :-1}).limit(6);
+    app.get('/popularClass', async (req, res) => {
+      const cursor = popularClassCollection.find().sort({ numberOfStudents: -1 }).limit(6);
       const result = await cursor.toArray();
       res.send(result);
     })
 
     // get popular instructors data
 
-    app.get('/popularInstructor', async (req, res) =>{
-      const cursor = popularInstructorCollection.find().sort({numberOfStudents: -1}).limit(6);
+    app.get('/popularInstructor', async (req, res) => {
+      const cursor = popularInstructorCollection.find().sort({ numberOfStudents: -1 }).limit(6);
       const result = await cursor.toArray();
       res.send(result);
     })
 
-    app.get('/instructors', async (req, res) =>{
+    app.get('/instructors', async (req, res) => {
       const result = await popularInstructorCollection.find().toArray()
       res.send(result);
-        })
+    })
+
+    app.get('/classes', async (req, res) => {
+      const result = await popularClassCollection.find().toArray()
+      res.send(result);
+    })
+
+
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
@@ -62,9 +69,9 @@ run().catch(console.dir);
 
 
 app.get('/', (req, res) => {
-    res.send("Creative capture is running");
+  res.send("Creative capture is running");
 })
 
-app.listen(port, () =>{
-    console.log(`Creative capture is running on port:${port}`);
+app.listen(port, () => {
+  console.log(`Creative capture is running on port:${port}`);
 })
