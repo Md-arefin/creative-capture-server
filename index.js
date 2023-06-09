@@ -24,10 +24,11 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
     const popularClassCollection = client.db('creativeCaptureDB').collection('classes');
     const popularInstructorCollection = client.db('creativeCaptureDB').collection('instructors');
+    const selectedClassCollection = client.db('creativeCaptureDB').collection('selected-classes');
 
     // get popular classes data
 
@@ -52,6 +53,14 @@ async function run() {
 
     app.get('/classes', async (req, res) => {
       const result = await popularClassCollection.find().toArray()
+      res.send(result);
+    })
+
+    // selected class
+    app.post('/classSelected', async (req,res) =>{
+      const classItem = req.body;
+      console.log(classItem);
+      const result = await selectedClassCollection.insertOne(classItem);
       res.send(result);
     })
 
