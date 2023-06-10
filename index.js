@@ -57,9 +57,21 @@ async function run() {
     })
 
     // selected class
+
+    app.get('/classSelected', async (req, res) =>{
+      const email = req.query.email;
+      // console.log(email)
+      if(!email){
+        res.send([]);
+      }
+      const query = { email: email };
+      const result = await selectedClassCollection.find(query).toArray();
+      res.send(result);
+    })
+
     app.post('/classSelected', async (req,res) =>{
       const classItem = req.body;
-      console.log(classItem);
+      // console.log(classItem);
       const result = await selectedClassCollection.insertOne(classItem);
       res.send(result);
     })
