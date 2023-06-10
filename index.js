@@ -3,7 +3,8 @@ const app = express();
 const cors = require('cors');
 const port = process.env.PORT || 5000;
 require('dotenv').config()
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const stripe = require("stripe")(process.env.STRIPE_KEY)
 
 // middleware
 app.use(cors());
@@ -76,7 +77,27 @@ async function run() {
       res.send(result);
     })
 
+    app.delete('/classSelected/:id', async (req, res) =>{
+      const id = req.params.id;
+      console.log(id)
+      const query = { _id : new ObjectId(id)};
+      const result = await selectedClassCollection.deleteOne(query);
+      res.send(result);
+    })
 
+    //create payments intent
+    app.post('/create-payment-intent', async (req, res) =>{
+      const { price } = req.body;
+      const amount = price * 100;
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: 'usd',
+        payment_method_types: ['card']
+      })
+      res.send({
+        clientSecret: paymentIntent.client_secret
+      })
+    })
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
