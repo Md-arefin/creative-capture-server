@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 const port = process.env.PORT || 5000;
 require('dotenv').config()
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
@@ -14,6 +15,25 @@ const corsOptions = {
 }
 app.use(cors(corsOptions));
 app.use(express.json());
+
+const verifyJWT = (req, res, next) =>{
+  const authorization = req.headers.authorization;
+  if(!authorization){
+    return res.status(401).send({error: true, message: 'unauthorized access' })
+  }
+
+  const token = authorization.split(' ')[1];
+
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) =>{
+    if(err){
+      return res.status(401).send({error: true, message: 'unauthorized access' })
+    }
+
+    req.decoded = decoded;
+    next();
+  })
+
+}
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.bqstehg.mongodb.net/?retryWrites=true&w=majority`;
@@ -38,6 +58,13 @@ async function run() {
     const paymentCollection = client.db('creativeCaptureDB').collection('payments');
     const userCollection = client.db('creativeCaptureDB').collection('users');
 
+    app.post('/jwt', (req, res) =>{
+      const user = req.body;
+      const token = jwt.sign(user , process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h'})
+
+      res.send({token})
+    })
+
     // get popular classes data
 
     app.get('/popularClass', async (req, res) => {
@@ -54,10 +81,14 @@ async function run() {
       res.send(result);
     })
 
+    // all instructors
+
     app.get('/instructors', async (req, res) => {
       const result = await instructorCollection.find().toArray()
       res.send(result);
     })
+
+    // all classes
 
     app.get('/classes', async (req, res) => {
       const result = await classCollection.find().toArray()
@@ -66,12 +97,19 @@ async function run() {
 
     // selected class
 
-    app.get('/classSelected', async (req, res) => {
+    app.get('/classSelected', verifyJWT, async (req, res) => {
       const email = req.query.email;
-      // console.log(email)
+      console.log(email)
       if (!email) {
         res.send([]);
       }
+
+      const decodedEmail = req.decoded.email;
+    
+      if(email !== decodedEmail){
+        return res.status(403).send({error: true, message: 'forbidden access' })
+      }
+
       const query = { email: email };
       const result = await selectedClassCollection.find(query).toArray();
       res.send(result);
@@ -86,7 +124,7 @@ async function run() {
 
     app.delete('/classSelected/:id', async (req, res) => {
       const id = req.params.id;
-      console.log(id)
+      // console.log(id)
       const query = { _id: new ObjectId(id) };
       const result = await selectedClassCollection.deleteOne(query);
       res.send(result);
@@ -96,7 +134,7 @@ async function run() {
     app.post('/create-payment-intent', async (req, res) => {
       const { price } = req.body;
       const amount = price * 100;
-      console.log(amount)
+      // console.log(amount)
       const paymentIntent = await stripe.paymentIntents.create({
         amount: amount,
         currency: 'usd',
@@ -118,24 +156,24 @@ async function run() {
 
     // user api
 
-    app.get('/users', async(req, res) =>{
+    app.get('/users', async (req, res) => {
       const result = await userCollection.find().toArray();
       res.send(result)
     })
 
     app.post('/users', async (req, res) => {
-     const user = req.body;
-     const query = { email: user.email }
-     const existingUser = await userCollection.findOne(query)
-     if(existingUser){
-      return res.send({ message: 'user already exist'})
-     }
-     console.log(user)
+      const user = req.body;
+      const query = { email: user.email }
+      const existingUser = await userCollection.findOne(query)
+      if (existingUser) {
+        return res.send({ message: 'user already exist' })
+      }
+      console.log(user)
       const result = await userCollection.insertOne(user);
       res.send(result)
     })
 
-    app.patch('/users/admin/:id', async (req, res) =>{
+    app.patch('/users/admin/:id', async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const updateDoc = {
@@ -143,11 +181,11 @@ async function run() {
           role: 'admin'
         },
       };
-      const  result = await userCollection.updateOne(query, updateDoc);
+      const result = await userCollection.updateOne(query, updateDoc);
       res.send(result)
     })
 
-    app.patch('/users/instructor/:id', async (req, res) =>{
+    app.patch('/users/instructor/:id', async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const updateDoc = {
@@ -155,17 +193,20 @@ async function run() {
           role: 'instructor'
         },
       };
-      const  result = await userCollection.updateOne(query, updateDoc);
+      const result = await userCollection.updateOne(query, updateDoc);
       res.send(result)
     })
 
     app.delete('/users/:id', async (req, res) => {
       const id = req.params.id;
-      console.log(id)
+      // console.log(id)
       const query = { _id: new ObjectId(id) };
       const result = await userCollection.deleteOne(query);
       res.send(result);
     })
+
+    // admin classes api 
+
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
