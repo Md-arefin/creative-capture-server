@@ -66,19 +66,19 @@ async function run() {
       const email = req.decoded.email;
       const query = { email: email }
       const user = await userCollection.findOne(query);
-      if(user?.role !== 'admin' ){
-        return res.status(403).send({error: true, message: 'forbidden message'})
+      if (user?.role !== 'admin') {
+        return res.status(403).send({ error: true, message: 'forbidden message' })
       }
       next();
     }
 
-      // get popular classes data
+    // get popular classes data
 
-      app.get('/popularClass', async (req, res) => {
-        const cursor = classCollection.find().sort({ numberOfStudents: -1 }).limit(6);
-        const result = await cursor.toArray();
-        res.send(result);
-      })
+    app.get('/popularClass', async (req, res) => {
+      const cursor = classCollection.find().sort({ numberOfStudents: -1 }).limit(6);
+      const result = await cursor.toArray();
+      res.send(result);
+    })
 
     // get popular instructors data
 
@@ -101,6 +101,14 @@ async function run() {
       const result = await classCollection.find().toArray()
       res.send(result);
     })
+
+    // add class
+    app.post('/classes', async (req, res) => {
+      const newItem = req.body;
+      const result = await classCollection.insertOne(newItem)
+      res.send(result);
+    })
+
 
     // selected class
 
@@ -163,14 +171,14 @@ async function run() {
       res.send({ InsertResult, deleteResult });
     })
 
-    app.get('/payments/:email', verifyJWT, async (req, res) =>{
+    app.get('/payments/:email', verifyJWT, async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
       const result = await paymentCollection.find(query).toArray()
       res.send(result)
     })
 
-    app.get('/payment/:email', async (req, res) =>{
+    app.get('/payment/:email', async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
       const result = await paymentCollection.find(query).sort({ date: -1 }).toArray()
