@@ -49,7 +49,6 @@ async function run() {
     // await client.connect();
 
     const classCollection = client.db('creativeCaptureDB').collection('classes');
-    const instructorCollection = client.db('creativeCaptureDB').collection('instructors');
     const selectedClassCollection = client.db('creativeCaptureDB').collection('selected-classes');
     const paymentCollection = client.db('creativeCaptureDB').collection('payments');
     const userCollection = client.db('creativeCaptureDB').collection('users');
@@ -80,20 +79,6 @@ async function run() {
       res.send(result);
     })
 
-    // get popular instructors data
-
-    app.get('/popularInstructor', async (req, res) => {
-      const cursor = instructorCollection.find().sort({ numberOfStudents: -1 }).limit(6);
-      const result = await cursor.toArray();
-      res.send(result);
-    })
-
-    // all instructors
-
-    app.get('/instructors', async (req, res) => {
-      const result = await instructorCollection.find().toArray()
-      res.send(result);
-    })
 
     // all classes
 
@@ -153,7 +138,7 @@ async function run() {
       res.send(result);
     })
 
-    //create payments intent ------------------
+    //create payments intent 
 
     app.post('/create-payment-intent', verifyJWT, async (req, res) => {
       const { price } = req.body;
@@ -169,7 +154,7 @@ async function run() {
       })
     })
 
-    // payment api ------------------------
+    // payment api 
 
     app.post('/payments', async (req, res) => {
       const payment = req.body;
@@ -208,7 +193,7 @@ async function run() {
       if (existingUser) {
         return res.send({ message: 'user already exist' })
       }
-      console.log(user)
+      // console.log(user)
       const result = await userCollection.insertOne(user);
       res.send(result)
     })
@@ -245,7 +230,9 @@ async function run() {
 
       const query = { email: email };
       const user = await userCollection.findOne(query);
+      // console.log(user)
       const result = { instructor: user?.role === 'instructor' }
+
       res.send(result);
     })
 
