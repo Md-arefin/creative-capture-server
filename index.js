@@ -186,7 +186,7 @@ async function run() {
       res.send(result)
     })
 
-    app.post('/users', async (req, res) => {
+    app.post('/user', async (req, res) => {
       const user = req.body;
       const query = { email: user.email }
       const existingUser = await userCollection.findOne(query)
