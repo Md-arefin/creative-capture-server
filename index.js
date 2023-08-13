@@ -22,7 +22,7 @@ const verifyJWT = (req, res, next) => {
 
   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
     if (err) {
-      return res.status(401).send({ error: true, message: 'unauthorized access' })
+      return res.status(403).send({ error: true, message: 'unauthorized access' })
     }
 
     req.decoded = decoded;
