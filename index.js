@@ -200,7 +200,7 @@ async function run() {
 
     //  check admin 
 
-    app.get('/users/admin/:email', verifyJWT, async (req, res) => {
+    app.get('/users/admin/:email', async (req, res) => {
       const email = req.params.email;
 
       const decodedEmail = req.decoded.email;
@@ -218,7 +218,7 @@ async function run() {
 
     // check instructor
 
-    app.get('/users/instructor/:email', verifyJWT, async (req, res) => {
+    app.get('/users/instructor/:email', async (req, res) => {
       const email = req.params.email;
 
       const decodedEmail = req.decoded.email;
