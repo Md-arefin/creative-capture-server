@@ -15,14 +15,14 @@ app.use(express.json());
 const verifyJWT = (req, res, next) => {
   const authorization = req.headers.authorization;
   if (!authorization) {
-    return res.status(401).send({ error: true, message: 'unauthorized access' })
+    return res.status(401).send({ error: true, message: 'Unauthorized access' })
   }
 
   const token = authorization.split(' ')[1];
 
   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
     if (err) {
-      return res.status(403).send({ error: true, message: 'unauthorized access' })
+      return res.status(403).send({ error: true, message: 'Unauthorized access' })
     }
 
     req.decoded = decoded;
@@ -52,10 +52,12 @@ async function run() {
     const selectedClassCollection = client.db('creativeCaptureDB').collection('selected-classes');
     const paymentCollection = client.db('creativeCaptureDB').collection('payments');
     const userCollection = client.db('creativeCaptureDB').collection('users');
+    const userReviewCollection = client.db('collegeHubDB').collection('userReviews');
+    // jwt
 
     app.post('/jwt', (req, res) => {
       const user = req.body;
-      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '10000h' })
 
       res.send({ token })
     })
@@ -200,7 +202,7 @@ async function run() {
 
     //  check admin 
 
-    app.get('/users/admin/:email', async (req, res) => {
+    app.get('/users/admin/:email', verifyJWT, async (req, res) => {
       const email = req.params.email;
 
       const decodedEmail = req.decoded.email;
@@ -218,7 +220,7 @@ async function run() {
 
     // check instructor
 
-    app.get('/users/instructor/:email', async (req, res) => {
+    app.get('/users/instructor/:email',  verifyJWT, async (req, res) => {
       const email = req.params.email;
 
       const decodedEmail = req.decoded.email;
@@ -268,7 +270,17 @@ async function run() {
       res.send(result);
     })
 
-    // admin classes api 
+    // review related api
+    app.get('/get-review', async (req, res) => {
+      const result = await userReviewCollection.find().toArray();
+      res.send(result);
+    }) 
+
+    app.post('/add-review', async (req, res) => {
+      const review = req.body;
+      const result = await userReviewCollection.insertOne(review);
+      res.send(result);
+    })
 
 
     // Send a ping to confirm a successful connection
